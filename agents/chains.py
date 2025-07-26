@@ -18,8 +18,8 @@ nest_asyncio.apply()
 load_dotenv()
 
 # --- Shared Components ---
-llm = ChatGroq(model="llama3-8b-8192", temperature=0.2)
-llm_creative = ChatGroq(model="llama3-8b-8192", temperature=0.4)
+llm = ChatGroq(model="llama3-70b-8192", temperature=0.2)
+llm_creative = ChatGroq(model="llama3-70b-8192", temperature=0.4)
 # Global variables to hold the RAG components
 retriever = None
 try:
@@ -313,7 +313,6 @@ def create_learning_path_chain():
         You have everything you need to succeed - now it's time to execute! 🚀
         """
 )
-    # The creative LLM is perfect for this task
     return prompt | llm_creative | StrOutputParser()
 
 
