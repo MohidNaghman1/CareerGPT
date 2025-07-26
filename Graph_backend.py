@@ -10,7 +10,7 @@ from langchain_core.output_parsers import StrOutputParser
 from pydantic.v1 import Field,BaseModel
 from agents.chains import create_resume_analyzer_chain,create_resume_qa_chain  , create_career_advisor_chain, create_learning_path_chain,create_job_search_chain
 from utils.file_parser import extract_text_from_file
-
+from utils.test_preprocessing import preprocess_user_input
 # --- 1. State definition is correct ---
 class AgentState(TypedDict):
     messages: Annotated[Sequence[BaseMessage], operator.add]
@@ -42,18 +42,6 @@ supervisor_llm = ChatGroq(model="llama3-70b-8192", temperature=0)
 
 # --- 3. Node Definitions ---
 
-def preprocess_user_input(user_input: str) -> str:
-    """Corrects common misspellings before processing."""
-    corrections = {
-        "comman": "common",
-        "prject": "project",
-        "resme": "resume",
-        # Add other common typos you notice over time
-    }
-    # A simple word-by-word replacement
-    words = user_input.lower().split()
-    corrected_words = [corrections.get(word, word) for word in words]
-    return " ".join(corrected_words)
 
 # --- THIS IS THE NEW, SMARTER SUPERVISOR NODE ---
 def supervisor_node(state: AgentState) -> dict:

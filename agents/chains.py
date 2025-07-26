@@ -7,7 +7,7 @@ from langchain_core.output_parsers import StrOutputParser
 from dotenv import load_dotenv
 from langchain_community.tools.tavily_search import TavilySearchResults
 # from langchain_community.tools import DuckDuckGoSearchRun
-from Graph_backend import preprocess_user_input
+from utils.test_preprocessing import preprocess_user_input
 from langchain_core.runnables import RunnablePassthrough,RunnableLambda
     
 # --- THIS IS THE CRITICAL FIX ---
