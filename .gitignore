@@ -1,0 +1,36 @@
+# ===================================================
+# .gitignore for a Python Streamlit AI Project
+# ===================================================
+
+# --- Python ---
+# Virtual environment folder
+/venv/
+/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# --- IDE & OS Files ---
+# Common files from editors like VS Code, PyCharm, etc.
+.vscode/
+.idea/
+*.swp
+# macOS specific
+.DS_Store
+
+# --- Secrets & Environment Variables ---
+# CRITICAL: Never commit your API keys!
+.env
+
+# --- Local Data & Generated Files ---
+# The generated FAISS vector store index. This should be rebuilt
+# by the setup script, not stored in the repo.
+/faiss_index/
+# Any temporary files, like uploaded resumes
+/temp_uploads/
+
+# --- Other ---
+# Distribution / packaging
+/dist/
+/build/
+*.egg-info/

@@ -1,0 +1,50 @@
+# ====================================================================
+# Requirements for the CareerGPT AI Career Assistant
+#
+# To create a virtual environment and install these dependencies:
+# 1. python -m venv venv
+# 2. venv\Scripts\activate  (on Windows)
+#    source venv/bin/activate (on macOS/Linux)
+# 3. pip install -r requirements.txt
+# ====================================================================
+
+# --- Core Web Framework ---
+# For building the entire user interface
+streamlit==1.47.0
+
+# --- LangChain & AI Orchestration ---
+# The main library for building AI applications
+langchain==0.3.26
+# Core data structures (Messages, Runnables, etc.)
+langchain-core==0.3.71
+# Community-provided integrations (vector stores, tools, etc.)
+langchain-community==0.3.27
+# The engine for building stateful, multi-agent graphs
+langgraph==0.5.4
+# Optional but good practice for debugging and tracing
+langsmith==0.4.8
+
+# --- LLM & Embedding Providers ---
+# For connecting to Groq's fast LLMs
+langchain-groq==0.3.6
+# For using Google's generative AI models (specifically embeddings)
+langchain-google-genai==2.1.8
+
+# --- Vector Store ---
+# For creating and loading the local RAG knowledge base
+# Using the CPU version for broader compatibility.
+faiss-cpu==1.11.0.post1
+
+# --- Tools & Utilities ---
+# For the web search agent to find real-time job postings
+tavily-python==0.7.10
+# For loading API keys and other environment variables from a .env file
+python-dotenv==1.1.1
+# Fix for running asyncio within another event loop (e.g., Streamlit)
+nest-asyncio==1.6.0
+
+# --- File Parsing ---
+# For extracting text from PDF resumes (also known as fitz)
+PyMuPDF==1.26.3
+# For extracting text from .docx resumes
+python-docx==1.2.0
