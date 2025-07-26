@@ -19,7 +19,7 @@ load_dotenv()
 
 # --- Shared Components ---
 llm = ChatGroq(model="llama3-8b-8192", temperature=0.2)
-llm_creative = ChatGroq(model="llama3-70b-8192", temperature=0.4)
+llm_creative = ChatGroq(model="llama3-8b-8192", temperature=0.4)
 # Global variables to hold the RAG components
 retriever = None
 try:
@@ -104,9 +104,7 @@ def create_career_advisor_chain():
     def retrieve_context(inputs: dict):
         docs = retriever.invoke(inputs["question"])
         return "\n\n".join([doc.page_content for doc in docs])
-        
-    llm_creative = ChatGroq(model="llama3-70b-8192", temperature=0.7) # Slightly lower temp for more consistent structure
-    
+            
     return {"context": retrieve_context, "question": lambda x: x["question"]} | prompt | llm_creative | StrOutputParser()
 
 def create_resume_analyzer_chain():
@@ -188,7 +186,6 @@ def create_resume_analyzer_chain():
     """
 )
 
-    llm_creative = ChatGroq(model="llama3-70b-8192", temperature=0.4)
     return prompt | llm_creative | StrOutputParser()
 
 
@@ -317,7 +314,6 @@ def create_learning_path_chain():
         """
 )
     # The creative LLM is perfect for this task
-    llm_creative = ChatGroq(model="llama3-70b-8192", temperature=0.4)
     return prompt | llm_creative | StrOutputParser()
 
 
@@ -491,6 +487,4 @@ def create_resume_qa_chain():
     **YOUR RESPONSE:**
     """
 )
-    # This task doesn't require a lot of creativity, so a fast model is fine.
-    llm = ChatGroq(model="llama3-8b-8192", temperature=0)
     return prompt | llm | StrOutputParser()
