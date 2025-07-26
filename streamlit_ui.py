@@ -160,9 +160,7 @@ def display_welcome_screen():
     """, unsafe_allow_html=True)
 
 def display_chat_history():
-    """Display chat messages with modern styling."""
-    st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-    
+    """Display chat messages with modern styling."""    
     for message in reversed(st.session_state.graph_state['messages']):
         if isinstance(message, (HumanMessage, AIMessage)):
             with st.chat_message(message.type):
