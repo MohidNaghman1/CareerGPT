@@ -42,6 +42,19 @@ supervisor_llm = ChatGroq(model="llama3-70b-8192", temperature=0)
 
 # --- 3. Node Definitions ---
 
+def preprocess_user_input(user_input: str) -> str:
+    """Corrects common misspellings before processing."""
+    corrections = {
+        "comman": "common",
+        "prject": "project",
+        "resme": "resume",
+        # Add other common typos you notice over time
+    }
+    # A simple word-by-word replacement
+    words = user_input.lower().split()
+    corrected_words = [corrections.get(word, word) for word in words]
+    return " ".join(corrected_words)
+
 # --- THIS IS THE NEW, SMARTER SUPERVISOR NODE ---
 def supervisor_node(state: AgentState) -> dict:
     """
@@ -140,8 +153,10 @@ def supervisor_node(state: AgentState) -> dict:
     ),
     ("user", "User request: '{request}'\n\nRouting decision:")
 ])
+    original_input = last_message.content
+    processed_input = preprocess_user_input(original_input)
     runnable = prompt | supervisor_llm | StrOutputParser()
-    next_agent = runnable.invoke({"request": last_message.content})
+    next_agent = runnable.invoke({"request": processed_input})
     
     cleaned_destination = next_agent.strip().replace("`", "").replace("'", "").replace('"', '')
     print(f"Supervisor LLM Decision: '{cleaned_destination}'")

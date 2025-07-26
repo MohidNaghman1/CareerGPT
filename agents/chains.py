@@ -7,7 +7,8 @@ from langchain_core.output_parsers import StrOutputParser
 from dotenv import load_dotenv
 from langchain_community.tools.tavily_search import TavilySearchResults
 # from langchain_community.tools import DuckDuckGoSearchRun
-from langchain_core.runnables import RunnablePassthrough
+from Graph_backend import preprocess_user_input
+from langchain_core.runnables import RunnablePassthrough,RunnableLambda
     
 # --- THIS IS THE CRITICAL FIX ---
 # Apply the patch to allow nested event loops.
@@ -99,14 +100,30 @@ def create_career_advisor_chain():
         **Your Helpful Answer:** 
         """ 
     )
-    # This part of the chain remains exactly the same.
-    # The logic is all in the prompt now.
-    def retrieve_context(inputs: dict):
-        docs = retriever.invoke(inputs["question"])
-        return "\n\n".join([doc.page_content for doc in docs])
-            
-    return {"context": retrieve_context, "question": lambda x: x["question"]} | prompt | llm_creative | StrOutputParser()
+    llm_creative = ChatGroq(model="llama3-70b-8192", temperature=0.7)
+    rag_chain = prompt | llm_creative | StrOutputParser()
+    def retrieve_and_check(inputs: dict):
+        """
+        Retrieves context, and if no context is found, returns a
+        pre-defined helpful message. Otherwise, invokes the LLM chain.
+        """
+        question = inputs["question"]
+        # Correct common typos before searching the vector store
+        corrected_question = preprocess_user_input(question) 
+        
+        docs = retriever.invoke(corrected_question)
+        
+        # --- THIS IS THE BULLETPROOF CHECK ---
+        if not docs:
+            # If no documents are found, bypass the LLM entirely.
+            return "I couldn't find specific information about that topic in my knowledge base. Could you try asking about a different career area?"
+        
+        # If documents are found, proceed with the RAG chain.
+        context = "\n\n".join([doc.page_content for doc in docs])
+        return rag_chain.invoke({"context": context, "question": question})
 
+    # The final chain is now a RunnableLambda that handles the logic
+    return RunnableLambda(retrieve_and_check)
 def create_resume_analyzer_chain():
     """Creates the chain for the Resume Analyst agent."""
     prompt = ChatPromptTemplate.from_template(
