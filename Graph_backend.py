@@ -1,5 +1,6 @@
 import os,json,re
 import operator
+from io import BytesIO
 from typing import TypedDict, Annotated, Sequence,Any,Literal,Dict
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate
@@ -15,6 +16,7 @@ class AgentState(TypedDict):
     messages: Annotated[Sequence[BaseMessage], operator.add]
     next: str
     resume_text: str | None
+    file_data: bytes | None
 
 class SupervisorDecision(BaseModel):
     next_agent: Literal["ResumeAnalyst", "CareerAdvisor", "LearningPath", "JobSearch", "END"] = Field(...) # <= ADD "JobSearch"
@@ -273,41 +275,43 @@ def job_search_node(state: AgentState) -> dict:
         job_postings_summary = "I'm sorry, I had trouble understanding your request for a job search. Could you please clearly state the job title and location you're interested in?"
 
     return {"messages": [AIMessage(content=job_postings_summary)], "next": "supervisor"}
-# In Graph_backend.py
-
-# In Graph_backend.py
 
 def resume_analyzer_node(state: AgentState) -> dict:
     print("---AGENT: ResumeAnalyst---")
-    user_input = state["messages"][-1].content
-    # This regex is more robust for finding file paths
-    file_path_match = re.search(r'([a-zA-Z]:\\[^:]+\.(?:pdf|docx|txt))', user_input)
-    file_path = file_path_match.group(1) if file_path_match else None
+    
+    # --- THIS IS THE NEW LOGIC ---
+    # 1. Get the file data directly from the state.
+    file_bytes = state.get("file_data")
 
-    if file_path and os.path.exists(file_path):
-        print(f"--- Found resume file path: {file_path} ---")
-        resume_text = extract_text_from_file(file_path)
+    if file_bytes:
+        print("--- Found resume data in state. Processing... ---")
+        
+        # 2. Use BytesIO to treat the bytes as a file for PyMuPDF.
+        #    We add a dummy name '.pdf' so the parser knows the file type.
+        file_like_object = BytesIO(file_bytes)
+        file_like_object.name = "resume.pdf" # Dummy name for filetype detection
+        
+        # 3. Call your existing file parser with the file-like object.
+        resume_text = extract_text_from_file(file_like_object)
         
         if "Error:" in resume_text:
             analysis_string = resume_text
-            # If there's an error reading the file, don't save the text
             return {"messages": [AIMessage(content=analysis_string)], "next": "supervisor"}
         else:
-            # Analyze the resume text
             analysis_string = resume_analyzer_agent.invoke({"resume_text": resume_text})
-            
-            # --- THIS IS THE CRITICAL FIX ---
-            # On a successful analysis, we MUST save the resume text to the state.
+            # Also, clear the file_data from the state after processing
             return {
                 "messages": [AIMessage(content=analysis_string)],
-                "resume_text": resume_text, # <-- SAVES a copy of the resume for the Q&A agent
+                "resume_text": resume_text,
+                "file_data": None, # <-- Clear the data
                 "next": "supervisor"
             }
     else:
-        # This block now correctly handles the case where this agent is called by mistake.
-        analysis_string = "I'm sorry, I can only analyze a resume if you provide a valid file path. Please upload your resume first."
+        # This block now handles the case where the user asks to analyze
+        # a resume without having uploaded one first.
+        analysis_string = "It looks like you want me to analyze a resume, but I don't see one. Please use the sidebar to upload your file first."
         return {"messages": [AIMessage(content=analysis_string)], "next": "supervisor"}
-
+    
 
 def resume_qa_node(state: AgentState) -> dict:
     print("---AGENT: ResumeQAAgent---")

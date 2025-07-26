@@ -62,14 +62,19 @@ def render_sidebar():
             
             if uploaded_file:
                 if st.button("🔍 Analyze Resume", type="primary", use_container_width=True):
-                    with st.spinner("🧠 Processing your resume..."):
-                        temp_dir = "temp_uploads"
-                        os.makedirs(temp_dir, exist_ok=True)
-                        file_path = os.path.abspath(os.path.join(temp_dir, uploaded_file.name))
-                        with open(file_path, "wb") as f:
-                            f.write(uploaded_file.getbuffer())
-                        st.session_state.run_prompt = f"Please analyze my resume: {file_path}"
-                        st.rerun()
+                    # 1. Read the file content as bytes directly from the uploader.
+                    file_bytes = uploaded_file.getvalue()
+                    
+                    # 2. Put the raw file data directly into the graph state.
+                    st.session_state.graph_state['file_data'] = file_bytes
+                    
+                    # 3. Create a generic prompt that signals the user's INTENT.
+                    #    The backend will get the file data from the state, not from the prompt.
+                    st.session_state.run_prompt = "Please analyze the uploaded resume."
+                    
+                    # 4. Rerun the app to trigger the conversation turn.
+                    st.rerun()
+
         
         st.markdown("---")
         
@@ -167,6 +172,14 @@ def display_chat_history():
                 st.markdown(message.content)
     
     st.markdown('</div>', unsafe_allow_html=True)
+
+
+def initialize_state():
+    """Initializes a new graph state in the session."""
+    st.session_state.graph_state = AgentState(
+        messages=[], next="", resume_text=None, file_data=None # <-- Add file_data
+    )
+
 
 def handle_conversation_turn(user_prompt: str):
     """
