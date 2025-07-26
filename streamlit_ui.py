@@ -169,27 +169,43 @@ def display_chat_history():
     st.markdown('</div>', unsafe_allow_html=True)
 
 def handle_conversation_turn(user_prompt: str):
-    """Process user input and generate AI response."""
-    # Add user message
+    """
+    Processes user input, displays a clean "thinking" indicator inside the
+    chat bubble, and then streams the AI's response.
+    """
+    # Add user message to state
     st.session_state.graph_state['messages'].append(HumanMessage(content=user_prompt))
-    
+
+    # Display user message
     with st.chat_message("user"):
         st.markdown(user_prompt)
-    
+
+    # Display assistant's chat bubble and handle the response
     with st.chat_message("assistant"):
-        with st.spinner("🧠 Thinking about your career question..."):
-            response_state = compiled_app.invoke(st.session_state.graph_state)
-            st.session_state.graph_state = response_state
-        
-        # Typing effect
-        full_response = st.session_state.graph_state['messages'][-1].content
+        # 1. Create a placeholder for the response
         response_placeholder = st.empty()
-        buffer = ""
         
+        # 2. Show a "thinking" message *inside* the placeholder
+        response_placeholder.markdown("🧠 Thinking...")
+
+        # 3. Call the backend to get the actual response
+        #    This is a blocking call, so the "Thinking..." message will remain until it's done.
+        try:
+            response_state = compiled_app.invoke(st.session_state.graph_state)
+            # Update the session state with the new, complete state from the backend
+            st.session_state.graph_state = response_state
+            full_response = st.session_state.graph_state['messages'][-1].content
+        except Exception as e:
+            # Handle potential errors from the backend gracefully
+            print(f"Error during backend invocation: {e}")
+            full_response = "I'm sorry, but I encountered an error while processing your request. Please try again."
+        
+        # 4. Stream the final response into the same placeholder, overwriting "Thinking..."
+        buffer = ""
         for char in full_response:
             buffer += char
             response_placeholder.markdown(buffer + "│")
-            time.sleep(0.003)
+            time.sleep(0.003) # Adjust typing speed if needed
         
         response_placeholder.markdown(full_response)
 
