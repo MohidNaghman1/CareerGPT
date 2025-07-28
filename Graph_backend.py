@@ -156,12 +156,33 @@ def supervisor_node(state: AgentState) -> dict:
         print(f"---SUPERVISOR WARNING: LLM returned invalid destination '{cleaned_destination}'. Defaulting to CareerAdvisor.---")
         return {"next": "CareerAdvisor"}
     
+# In Graph_backend.py
+
+# --- REPLACE your old career_advisor_node with this new, robust version ---
 def career_advisor_node(state: AgentState) -> dict:
     print("---AGENT: CareerAdvisor---")
-    question = state["messages"][-1].content
-    answer_string = career_advisor_agent.invoke({"question": question})
-    return {"messages": [AIMessage(content=answer_string)], "next": "supervisor"}
+    answer_string = ""
+    try:
+        question = state["messages"][-1].content
+        # This is the line that might fail
+        answer_string = career_advisor_agent.invoke({"question": question})
+        
+        # A check in case the agent returns an empty or error-like string
+        if not answer_string or "error" in answer_string.lower():
+            print(f"---CAREER ADVISOR: Agent returned an empty or error-like response: '{answer_string}'")
+            raise ValueError("Agent returned a non-viable answer.")
 
+    except Exception as e:
+        # This is our safety net for this specific node
+        print(f"---!!! CAREER ADVISOR NODE FAILED !!!---")
+        print(f"---Error: {e}")
+        # Provide a specific, helpful message to the user
+        answer_string = (
+            "I'm sorry, my Career Advisor module is currently experiencing an issue and I can't access my knowledge base. "
+            "This could be due to a temporary connection problem. Please try a different question or check back in a moment."
+        )
+        
+    return {"messages": [AIMessage(content=answer_string)], "next": "supervisor"}
 
 def learning_path_node(state: AgentState) -> dict:
     """
