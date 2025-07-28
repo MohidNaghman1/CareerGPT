@@ -4,7 +4,7 @@ CareerGPT is a sophisticated, multi-agent AI assistant designed to provide compr
 
 ---
 
-https://github.com/MohidNaghman1/CareerGPT/issues/1#issue-3268360149
+Demo: (https://github.com/MohidNaghman1/CareerGPT/issues/1#issue-3268360149)
 
 
 ## ✨ Core Features
