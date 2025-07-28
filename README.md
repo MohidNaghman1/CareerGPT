@@ -4,6 +4,9 @@ CareerGPT is a sophisticated, multi-agent AI assistant designed to provide compr
 
 ---
 
+https://github.com/MohidNaghman1/CareerGPT/issues/1#issue-3268360149
+
+
 ## ✨ Core Features
 
 -   🧠 **Intelligent Agentic Workflow:** A robust "hub and spoke" design using LangGraph. A central supervisor agent intelligently routes user requests to specialized agents for different tasks.
